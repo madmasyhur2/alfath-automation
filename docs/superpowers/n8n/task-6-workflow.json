@@ -21,13 +21,12 @@
     },
     {
       "id": "22222222-2222-2222-2222-222222222222",
-      "name": "LookupTeacher",
+      "name": "GetAllTeachers",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
       "position": [460, 400],
-      "continueOnFail": true,
       "parameters": {
-        "operation": "lookup",
+        "operation": "getAll",
         "documentId": {
           "__rl": true,
           "value": "PASTE_YOUR_SPREADSHEET_ID_HERE",
@@ -38,8 +37,7 @@
           "value": "Teachers",
           "mode": "name"
         },
-        "lookupColumn": "telegram_user_id",
-        "lookupValue": "={{ String($json.message.from.id) }}",
+        "returnAll": true,
         "options": {}
       },
       "credentials": {
@@ -50,11 +48,21 @@
       }
     },
     {
+      "id": "aa111111-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "name": "FindTeacher",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 400],
+      "parameters": {
+        "jsCode": "const userId = String($('Telegram Trigger').item.json.message.from.id);\nconst rows = $input.all().map(i => i.json);\nconst teacher = rows.find(r => String(r.telegram_user_id) === userId);\nreturn [{ json: teacher || {} }];"
+      }
+    },
+    {
       "id": "33333333-3333-3333-3333-333333333333",
       "name": "Guard: Registered?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [680, 400],
+      "position": [900, 400],
       "parameters": {
         "conditions": {
           "options": {
@@ -80,11 +88,21 @@
       }
     },
     {
+      "id": "55555555-5555-5555-5555-555555555555",
+      "name": "ParseCommand",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 520],
+      "parameters": {
+        "jsCode": "const msg = $('Telegram Trigger').item.json.message.text || '';\nconst firstLine = msg.split('\\n')[0].trim();\nconst rawCommand = firstLine.split(/\\s+/)[0].toLowerCase();\nconst command = rawCommand.split('@')[0]; // handle /command@botname in group chats\nconst afterCmd = firstLine.slice(rawCommand.length).trim();\nconst restLines = msg.split('\\n').slice(1).join('\\n').trim();\nconst body = [afterCmd, restLines].filter(Boolean).join('\\n');\nreturn [{ json: { command, body } }];"
+      }
+    },
+    {
       "id": "44444444-4444-4444-4444-444444444444",
       "name": "Send: Not Registered",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [900, 260],
+      "position": [1120, 260],
       "parameters": {
         "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
         "text": "Maaf, Anda belum terdaftar sebagai guru.",
@@ -98,21 +116,11 @@
       }
     },
     {
-      "id": "55555555-5555-5555-5555-555555555555",
-      "name": "ParseCommand",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [900, 520],
-      "parameters": {
-        "jsCode": "const msg = $('Telegram Trigger').item.json.message.text || '';\nconst firstLine = msg.split('\\n')[0].trim();\nconst rawCommand = firstLine.split(/\\s+/)[0].toLowerCase();\nconst command = rawCommand.split('@')[0]; // handle /command@botname in group chats\nconst afterCmd = firstLine.slice(rawCommand.length).trim();\nconst restLines = msg.split('\\n').slice(1).join('\\n').trim();\nconst body = [afterCmd, restLines].filter(Boolean).join('\\n');\nreturn [{ json: { command, body } }];"
-      }
-    },
-    {
       "id": "66666666-6666-6666-6666-666666666666",
       "name": "Route Command",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3,
-      "position": [1120, 520],
+      "position": [1340, 520],
       "parameters": {
         "rules": {
           "values": [
@@ -176,7 +184,7 @@
       "name": "Send: Menu",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [1340, 620],
+      "position": [1560, 620],
       "parameters": {
         "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
         "text": "Perintah yang tersedia:\n/absen — catat kehadiran kelas (wali kelas)\n/daftar — tampilkan daftar siswa kelas Anda\n/menu — bantuan",
@@ -194,7 +202,7 @@
       "name": "[TODO Task 7] absen",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [1340, 400],
+      "position": [1560, 400],
       "parameters": {}
     },
     {
@@ -202,17 +210,22 @@
       "name": "[TODO Task 7] daftar",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [1340, 520],
+      "position": [1560, 520],
       "parameters": {}
     }
   ],
   "connections": {
     "Telegram Trigger": {
       "main": [
-        [{"node": "LookupTeacher", "type": "main", "index": 0}]
+        [{"node": "GetAllTeachers", "type": "main", "index": 0}]
       ]
     },
-    "LookupTeacher": {
+    "GetAllTeachers": {
+      "main": [
+        [{"node": "FindTeacher", "type": "main", "index": 0}]
+      ]
+    },
+    "FindTeacher": {
       "main": [
         [{"node": "Guard: Registered?", "type": "main", "index": 0}]
       ]
