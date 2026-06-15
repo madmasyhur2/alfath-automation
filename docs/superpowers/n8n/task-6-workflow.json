@@ -1,0 +1,245 @@
+{
+  "name": "AlFath Bot",
+  "nodes": [
+    {
+      "id": "11111111-1111-1111-1111-111111111111",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 400],
+      "webhookId": "aaaabbbb-cccc-dddd-eeee-ffffaaaabbbb",
+      "parameters": {
+        "updates": ["message"],
+        "additionalFields": {}
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "AlFath Telegram"
+        }
+      }
+    },
+    {
+      "id": "22222222-2222-2222-2222-222222222222",
+      "name": "LookupTeacher",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [460, 400],
+      "continueOnFail": true,
+      "parameters": {
+        "operation": "lookup",
+        "documentId": {
+          "__rl": true,
+          "value": "PASTE_YOUR_SPREADSHEET_ID_HERE",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Teachers",
+          "mode": "name"
+        },
+        "lookupColumn": "telegram_user_id",
+        "lookupValue": "={{ String($json.message.from.id) }}",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2",
+          "name": "AlFath Google Sheets"
+        }
+      }
+    },
+    {
+      "id": "33333333-3333-3333-3333-333333333333",
+      "name": "Guard: Registered?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 400],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.teacher_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "44444444-4444-4444-4444-444444444444",
+      "name": "Send: Not Registered",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [900, 260],
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Maaf, Anda belum terdaftar sebagai guru.",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "AlFath Telegram"
+        }
+      }
+    },
+    {
+      "id": "55555555-5555-5555-5555-555555555555",
+      "name": "ParseCommand",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 520],
+      "parameters": {
+        "jsCode": "const msg = $('Telegram Trigger').item.json.message.text || '';\nconst firstLine = msg.split('\\n')[0].trim();\nconst rawCommand = firstLine.split(/\\s+/)[0].toLowerCase();\nconst command = rawCommand.split('@')[0]; // handle /command@botname in group chats\nconst afterCmd = firstLine.slice(rawCommand.length).trim();\nconst restLines = msg.split('\\n').slice(1).join('\\n').trim();\nconst body = [afterCmd, restLines].filter(Boolean).join('\\n');\nreturn [{ json: { command, body } }];"
+      }
+    },
+    {
+      "id": "66666666-6666-6666-6666-666666666666",
+      "name": "Route Command",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [1120, 520],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {"caseSensitive": false, "leftValue": "", "typeValidation": "loose"},
+                "conditions": [
+                  {
+                    "id": "r1",
+                    "leftValue": "={{ $json.command }}",
+                    "rightValue": "/absen",
+                    "operator": {"type": "string", "operation": "equals"}
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "absen"
+            },
+            {
+              "conditions": {
+                "options": {"caseSensitive": false, "leftValue": "", "typeValidation": "loose"},
+                "conditions": [
+                  {
+                    "id": "r2",
+                    "leftValue": "={{ $json.command }}",
+                    "rightValue": "/daftar",
+                    "operator": {"type": "string", "operation": "equals"}
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "daftar"
+            },
+            {
+              "conditions": {
+                "options": {"caseSensitive": false, "leftValue": "", "typeValidation": "loose"},
+                "conditions": [
+                  {
+                    "id": "r3",
+                    "leftValue": "={{ $json.command }}",
+                    "rightValue": "/menu",
+                    "operator": {"type": "string", "operation": "equals"}
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "menu"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      }
+    },
+    {
+      "id": "77777777-7777-7777-7777-777777777777",
+      "name": "Send: Menu",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1340, 620],
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Perintah yang tersedia:\n/absen — catat kehadiran kelas (wali kelas)\n/daftar — tampilkan daftar siswa kelas Anda\n/menu — bantuan",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "AlFath Telegram"
+        }
+      }
+    },
+    {
+      "id": "88888888-8888-8888-8888-888888888888",
+      "name": "[TODO Task 7] absen",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1340, 400],
+      "parameters": {}
+    },
+    {
+      "id": "99999999-9999-9999-9999-999999999999",
+      "name": "[TODO Task 7] daftar",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1340, 520],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [{"node": "LookupTeacher", "type": "main", "index": 0}]
+      ]
+    },
+    "LookupTeacher": {
+      "main": [
+        [{"node": "Guard: Registered?", "type": "main", "index": 0}]
+      ]
+    },
+    "Guard: Registered?": {
+      "main": [
+        [{"node": "ParseCommand", "type": "main", "index": 0}],
+        [{"node": "Send: Not Registered", "type": "main", "index": 0}]
+      ]
+    },
+    "ParseCommand": {
+      "main": [
+        [{"node": "Route Command", "type": "main", "index": 0}]
+      ]
+    },
+    "Route Command": {
+      "main": [
+        [{"node": "[TODO Task 7] absen", "type": "main", "index": 0}],
+        [{"node": "[TODO Task 7] daftar", "type": "main", "index": 0}],
+        [{"node": "Send: Menu", "type": "main", "index": 0}],
+        [{"node": "Send: Menu", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {}
+}
