@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Tanggal** | 2026-06-17 |
-| **Status** | Draft — menunggu review |
+| **Status** | Direview & disetujui — 2026-06-17 |
 | **Dokumen pasangan** | `2026-06-17-sim-integration-prd.md` (kontrak data & API) |
 | **Menggantikan** | `2026-06-15-school-monitoring-telegram-bot-design.md` (versi Sheets) |
 
@@ -123,10 +123,12 @@ admin → + `/spp` (Fase C). Teks ringkas + (opsional) tombol.
    - Untuk kelas besar, render **per-halaman** (mis. 8 santri/halaman) + tombol
      `[◀] [▶]`. (Hindari melebihi batas tombol Telegram.)
 4. **Ubah status.** Tekan status → update state → `editMessageText` papan.
-5. **Keterangan (opsional).** Tekan `➕ Keterangan` → bot kirim daftar santri non-Hadir
-   sebagai tombol → pilih santri → **force-reply** "Keterangan untuk <nama>? (ketik
-   atau /lewati)". Teks tersimpan ke state. *"Terlambat"* dicatat di sini:
-   keterangan `"Terlambat 18:10"` pada santri berstatus Hadir (PRD §6.3).
+5. **Keterangan (opsional).** Tekan `➕ Keterangan` → bot kirim daftar santri **(boleh
+   semua, termasuk yang Hadir — agar bisa menandai terlambat)** sebagai tombol → pilih
+   santri → **force-reply** dengan **placeholder** (`input_field_placeholder`, mis.
+   `"Terlambat 10 Menit / alasan…"`): "Keterangan untuk <nama>? (ketik atau /lewati)".
+   Teks tersimpan ke state. *"Terlambat"* dicatat di sini sebagai keterangan
+   **`"Terlambat <n> Menit"`** pada santri berstatus **Hadir** (PRD §6.3).
 6. **Simpan.** Tekan `💾 Simpan` → susun `POST /absensi/batch` (seluruh kelas, semua
    status + keterangan) → tampilkan ringkasan: `✅ Tersimpan. 27 Hadir, 1 Sakit, 1 Izin,
    1 Alpha.` Bersihkan sesi.
@@ -171,7 +173,7 @@ Pola lama dipertahankan: fungsi **murni** (tanpa I/O) hidup di `src/`, diuji
 | `src/format/keyboard.js` | `buildAbsenKeyboard(roster, statusMap, page)`, `buildPickKeyboard(items, action)` | render `inline_keyboard` + `callback_data` valid (≤64B), paginasi |
 | `src/parsers/scores.js` | `parseScores(text, roster)` → `{entries:[{santri_id,nilai}], errors}` | rentang 0–100, desimal, nomor tak dikenal, duplikat, kosong |
 | `src/parsers/callback.js` | `parseCallbackData(data)` → `{cmd, action, idx, value}` | format & batas |
-| `src/logic/absen.js` | `applyStatus(state, idx, status)`, `summarize(statusMap, roster)` | reducer status, hitung ringkasan H/S/I/A, penanda Terlambat |
+| `src/logic/absen.js` | `applyStatus(state, idx, status)`, `summarize(statusMap, roster)` | reducer status, ringkasan H/S/I/A, deteksi keterangan ber-awalan `"Terlambat"` untuk hitungan terlambat |
 | `src/logic/absen.js` | `toAbsensiBatch(state)` | bentuk body `/absensi/batch` benar |
 | `src/logic/nilai.js` | `nextKe(history)`, `previewAverage(history, ke, nilai)` | auto-increment, pratinjau rata-rata |
 | `src/format/summary.js` | `formatAbsenSummary`, `formatNilaiSummary`, `formatTugasHistory` | string balasan |
@@ -218,10 +220,13 @@ GUI (n8n editor / web SIM) yang masing-masing punya verifikasi.
 
 ---
 
-## 10. Keputusan Terbuka
+## 10. Keputusan (final — lihat PRD §11)
 
-Lihat PRD §11: penegakan peran `/absen`, input Tugas via web SIM (Fase A vs nanti),
-state store (static data vs tabel), format penanda "Terlambat".
+Seluruh keputusan terbuka sudah dikonfirmasi (review 2026-06-17): `/absen` tetap
+permisif (tidak dibatasi wali kelas); input Tugas di web SIM **diubah pada Fase A**
+(lewat `nilai_tugas`, kolom `nilai.tugas` jadi turunan); state percakapan **default =
+static data n8n**; penanda terlambat = keterangan **`"Terlambat <n> Menit"`** dengan
+**placeholder** di kolom isian.
 
 ---
 

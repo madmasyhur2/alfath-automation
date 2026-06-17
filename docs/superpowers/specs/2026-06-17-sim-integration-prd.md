@@ -5,7 +5,7 @@
 | **Produk** | Al-Fath Automation (Bot Telegram) — sumber data = SIM-Madrasah |
 | **Versi Dokumen** | 1.0 |
 | **Tanggal** | 2026-06-17 |
-| **Status** | Draft — menunggu review |
+| **Status** | Direview & disetujui — 2026-06-17 |
 | **Dokumen pasangan** | `2026-06-17-sim-backed-telegram-bot-design.md` (desain & alur) |
 | **Sistem sumber** | `sim-madrasah-alfath` — Next.js · Go (chi) · MySQL |
 
@@ -241,8 +241,11 @@ lain dipertahankan. Bot mengirim UTS/UAS lewat endpoint ini (lihat §6.4); Tugas
 
 ### 6.3 Absensi — status & "Terlambat"
 - Status valid yang dikirim ke SIM: **`hadir` | `izin` | `sakit` | `alpha`**.
-- **"Terlambat" dipetakan ke `hadir`** dengan `keterangan` diisi penanda, mis.
-  `"Terlambat 18:10"`. Tidak menambah enum SIM, tidak mengubah math dashboard SIM.
+- **"Terlambat" dipetakan ke `hadir`** dengan `keterangan` memuat penanda seragam
+  **`"Terlambat <n> Menit"`** (mis. `"Terlambat 10 Menit"`). Tidak menambah enum SIM,
+  tidak mengubah math dashboard SIM. Bot menampilkan **placeholder** pada kolom isian
+  keterangan (Telegram `force_reply.input_field_placeholder`) agar guru menulis dengan
+  format seragam; untuk izin/sakit guru tetap boleh menulis keterangan bebas.
 - Tombol status di bot: **Hadir / Sakit / Izin / Alpha** (4 tombol). Default semua
   Hadir; guru hanya mengubah yang perlu (model exception tetap, kini lewat tombol).
 - Simpan = `POST /absensi/batch` (upsert per `(santri, tanggal)`), satu transaksi.
@@ -340,16 +343,18 @@ Tiap fase punya **plan implementasi** tersendiri (lihat dokumen pasangan & writi
 
 ---
 
-## 11. Pertanyaan Terbuka (untuk dikonfirmasi saat review)
+## 11. Keputusan Final (dikonfirmasi saat review — 2026-06-17)
 
-1. **Penegakan peran `/absen`:** v-sekarang permisif (semua guru, semua kelas) sesuai
-   SIM. Perlukah dibatasi ke wali kelas saja? (Asumsi: tidak.)
-2. **Web SIM input Tugas:** apakah form input Tugas di web SIM diubah sekarang (Fase A)
-   agar menulis lewat `nilai_tugas`, atau cukup menampilkan rincian dulu & input Tugas
-   hanya via bot sementara? (Asumsi PRD: ubah agar konsisten — §6.5.)
-3. **Penyimpanan state percakapan n8n:** static data n8n vs tabel `bot_session` di
-   MySQL. (Dibahas di dokumen desain; default: static data n8n.)
-4. **Penanda "Terlambat":** format keterangan baku, mis. `"Terlambat HH:MM"`? (Asumsi: ya.)
+1. **Penegakan peran `/absen`:** **TIDAK dibatasi** ke wali kelas. Tetap permisif —
+   semua guru boleh absen kelas mana pun (sesuai kebijakan SIM). §4.2.
+2. **Web SIM input Tugas:** **Diubah pada Fase A** — form input Tugas di web SIM
+   menulis lewat `nilai_tugas` lalu re-average; kolom `nilai.tugas` bersifat
+   read-only/turunan di seluruh sistem. §6.5.
+3. **State percakapan n8n:** **Default = static data n8n** (key = `chat_id`); tabel
+   `bot_session` di MySQL hanya bila n8n multi-instans. Lihat dokumen desain §4.
+4. **Penanda "Terlambat":** **Bukan format jam.** Cukup keterangan memuat
+   **`"Terlambat <n> Menit"`** (mis. `"Terlambat 10 Menit"`). Bot menampilkan
+   **placeholder** pada kolom keterangan agar formatnya seragam. §6.3.
 
 ---
 
