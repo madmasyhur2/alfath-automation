@@ -1,0 +1,2298 @@
+﻿{
+    "updatedAt":  "2026-06-23T04:33:44.759Z",
+    "createdAt":  "2026-06-23T04:00:52.696Z",
+    "id":  "FgDK2YXQDy2RtwS5",
+    "name":  "AlFath Bot v2",
+    "description":  null,
+    "active":  true,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "id":  "t01-telegram-trigger",
+                      "name":  "Telegram Trigger",
+                      "type":  "n8n-nodes-base.telegramTrigger",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       -2000,
+                                       240
+                                   ],
+                      "parameters":  {
+                                         "updates":  [
+                                                         "message",
+                                                         "callback_query"
+                                                     ],
+                                         "additionalFields":  {
+
+                                                              }
+                                     },
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "PCo3XUoDlXV9LGFq",
+                                                              "name":  "AlFath Telegram Bot"
+                                                          }
+                                      },
+                      "webhookId":  "daeb4c3e-6d84-4524-b6ae-edcb8657f64e"
+                  },
+                  {
+                      "id":  "t02-normalize",
+                      "name":  "Normalize",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -1760,
+                                       240
+                                   ],
+                      "parameters":  {
+                                         "jsCode":  "const u = $input.item.json;\nconst isCb = !!u.callback_query;\nconst from = isCb ? u.callback_query.from : u.message.from;\nconst chat = isCb ? u.callback_query.message.chat : u.message.chat;\nreturn [{ json: {\n  isCallback: isCb,\n  telegramUserId: from.id,\n  chatId: chat.id,\n  messageId: isCb ? u.callback_query.message.message_id : null,\n  callbackId: isCb ? u.callback_query.id : null,\n  callbackData: isCb ? u.callback_query.data : null,\n  text: isCb ? \u0027\u0027 : (u.message.text || \u0027\u0027),\n}}];"
+                                     }
+                  },
+                  {
+                      "id":  "t03-botlogin",
+                      "name":  "BotLogin",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -1520,
+                                       240
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "http://103.175.219.47:8090/api/v1/auth/bot-login",
+                                         "sendBody":  true,
+                                         "contentType":  "json",
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "bot_secret",
+                                                                                       "value":  "34854c2b544c071b6ae10863ae974d2b4423d1db51b88f0c74b5301f34ffce91"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "telegram_user_id",
+                                                                                       "value":  "={{ $(\u0027Normalize\u0027).item.json.telegramUserId }}"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+                                                         "response":  {
+                                                                          "response":  {
+                                                                                           "neverError":  true
+                                                                                       }
+                                                                      }
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "t04-registered",
+                      "name":  "Registered?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -1280,
+                                       240
+                                   ],
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  1
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "c1",
+                                                                                   "leftValue":  "={{ $json.token }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "notEmpty",
+                                                                                                    "singleValue":  true
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "t05-not-registered",
+                      "name":  "Send: Not Registered",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       -1040,
+                                       80
+                                   ],
+                      "parameters":  {
+                                         "chatId":  "={{ $(\u0027Normalize\u0027).item.json.chatId }}",
+                                         "text":  "Maaf, Anda belum terdaftar sebagai guru. Hubungi admin untuk mendaftarkan akun Telegram Anda.",
+                                         "additionalFields":  {
+
+                                                              }
+                                     },
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "PCo3XUoDlXV9LGFq",
+                                                              "name":  "AlFath Telegram Bot"
+                                                          }
+                                      },
+                      "webhookId":  "fec19541-2dfc-4184-9d6a-cf8c42a70c11"
+                  },
+                  {
+                      "id":  "t06-route",
+                      "name":  "Route",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -1040,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "jsCode":  "function parseCallbackData(data) {\n  if (!data || typeof data !== \u0027string\u0027) return null;\n  const parts = data.split(\u0027:\u0027);\n  if (parts.length \u003c 2) return null;\n  return { cmd: parts[0], action: parts[1], args: parts.slice(2) };\n}\nconst n = $(\u0027Normalize\u0027).item.json;\nlet route;\nif (n.isCallback) {\n  const cb = parseCallbackData(n.callbackData);\n  route = cb ? cb.cmd : \u0027unknown\u0027;\n  return [{ json: { route, isCallback: true, cb } }];\n}\nconst first = (n.text.split(\u0027\\n\u0027)[0] || \u0027\u0027).trim();\nconst raw = first.split(/\\s+/)[0].toLowerCase().split(\u0027@\u0027)[0];\nconst arg = first.slice(raw.length).trim();\nroute = raw.replace(\u0027/\u0027, \u0027\u0027);\nreturn [{ json: { route, isCallback: false, command: raw, arg } }];"
+                                     }
+                  },
+                  {
+                      "id":  "t07-dispatch",
+                      "name":  "Dispatch",
+                      "type":  "n8n-nodes-base.switch",
+                      "typeVersion":  3,
+                      "position":  [
+                                       -800,
+                                       400
+                                   ],
+                      "parameters":  {
+                                         "rules":  {
+                                                       "values":  [
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "loose",
+                                                                                                             "version":  1
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "r1",
+                                                                                                                    "leftValue":  "={{ $json.route }}",
+                                                                                                                    "rightValue":  "absen",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "absen"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "loose",
+                                                                                                             "version":  1
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "r2",
+                                                                                                                    "leftValue":  "={{ $json.route }}",
+                                                                                                                    "rightValue":  "nilai",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "nilai"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "loose",
+                                                                                                             "version":  1
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "r3",
+                                                                                                                    "leftValue":  "={{ $json.route }}",
+                                                                                                                    "rightValue":  "daftar",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "daftar"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "loose",
+                                                                                                             "version":  1
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "r4",
+                                                                                                                    "leftValue":  "={{ $json.route }}",
+                                                                                                                    "rightValue":  "menu",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "menu"
+                                                                      }
+                                                                  ]
+                                                   },
+                                         "options":  {
+                                                         "fallbackOutput":  "extra"
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "t08-send-menu",
+                      "name":  "Send: Menu",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       -560,
+                                       560
+                                   ],
+                      "parameters":  {
+                                         "chatId":  "={{ $(\u0027Normalize\u0027).item.json.chatId }}",
+                                         "text":  "Perintah:\n/absen [nama kelas] â€” catat kehadiran\n/nilai [Tugas|UTS|UAS] â€” input nilai\n/daftar [nama kelas] â€” daftar santri\n/menu â€” bantuan",
+                                         "additionalFields":  {
+
+                                                              }
+                                     },
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "PCo3XUoDlXV9LGFq",
+                                                              "name":  "AlFath Telegram Bot"
+                                                          }
+                                      },
+                      "webhookId":  "3bcf8f29-a6ba-4f06-8dda-4e6808a11bf0"
+                  },
+                  {
+                      "id":  "d01-getkelas-daftar",
+                      "name":  "GetKelas_Daftar",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -560,
+                                       80
+                                   ],
+                      "parameters":  {
+                                         "method":  "GET",
+                                         "url":  "http://103.175.219.47:8090/api/v1/kelas",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "=Bearer {{ $(\u0027BotLogin\u0027).item.json.token }}"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "options":  {
+
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "d02-matchkelas-daftar",
+                      "name":  "MatchKelas_Daftar",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -320,
+                                       80
+                                   ],
+                      "parameters":  {
+                                         "mode":  "runOnceForAllItems",
+                                         "jsCode":  "const route = $(\u0027Route\u0027).item.json;\nconst arg = (route.arg || \u0027\u0027).trim().toLowerCase();\nconst cb = route.cb;\nconst kelasId = cb ? cb.args[0] : null;\n// Handle both array-split items and single-object {data:[...]} response\nconst raw = $input.all().map(i =\u003e i.json);\nconst list = (raw.length === 1 \u0026\u0026 Array.isArray(raw[0].data)) ? raw[0].data : raw;\nlet found = null;\nif (kelasId) {\n  found = list.find(k =\u003e String(k.id) === String(kelasId)) || null;\n} else if (arg) {\n  found = list.find(k =\u003e (k.nama || \u0027\u0027).toLowerCase() === arg) || null;\n}\nconst rows = list.map(k =\u003e [{ text: k.nama, callback_data: `daftar:pick:${k.id}` }]);\nreturn [{ json: { found, list, keyboard: rows } }];"
+                                     }
+                  },
+                  {
+                      "id":  "d03-hasclass-daftar",
+                      "name":  "HasClass_Daftar?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -80,
+                                       80
+                                   ],
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  1
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "c1",
+                                                                                   "leftValue":  "={{ $json.found }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "notEmpty",
+                                                                                                    "singleValue":  true
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "d04-getsantri-daftar",
+                      "name":  "GetSantri_Daftar",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       160,
+                                       -80
+                                   ],
+                      "parameters":  {
+                                         "method":  "GET",
+                                         "url":  "=http://103.175.219.47:8090/api/v1/santri?kelas_id={{ $json.found.id }}",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "=Bearer {{ $(\u0027BotLogin\u0027).item.json.token }}"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "options":  {
+
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "d05-formatroster-daftar",
+                      "name":  "FormatRoster_Daftar",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       400,
+                                       -80
+                                   ],
+                      "parameters":  {
+                                         "mode":  "runOnceForAllItems",
+                                         "jsCode":  "const raw = $input.all().map(i =\u003e i.json);\nconst santri = (raw.length === 1 \u0026\u0026 Array.isArray(raw[0].data)) ? raw[0].data : raw;\nconst kelas = $(\u0027MatchKelas_Daftar\u0027).item.json.found;\nconst roster = santri.map((r, i) =\u003e `${i + 1}. ${r.nama}`).join(\u0027\\n\u0027);\nreturn [{ json: { text: `Daftar santri kelas ${kelas.nama} (${santri.length} santri):\\n\\n${roster}` } }];"
+                                     }
+                  },
+                  {
+                      "id":  "d06-send-daftar",
+                      "name":  "Send_Daftar",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       640,
+                                       -80
+                                   ],
+                      "parameters":  {
+                                         "chatId":  "={{ $(\u0027Normalize\u0027).item.json.chatId }}",
+                                         "text":  "={{ $json.text }}",
+                                         "additionalFields":  {
+
+                                                              }
+                                     },
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "PCo3XUoDlXV9LGFq",
+                                                              "name":  "AlFath Telegram Bot"
+                                                          }
+                                      },
+                      "webhookId":  "17de33b3-7b61-49a3-9e02-2d104aebfbed"
+                  },
+                  {
+                      "id":  "d07-sendpickkelas-daftar",
+                      "name":  "SendPickKelas_Daftar",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       160,
+                                       240
+                                   ],
+                      "parameters":  {
+                                         "chatId":  "={{ $(\u0027Normalize\u0027).item.json.chatId }}",
+                                         "text":  "Pilih kelas:",
+                                         "additionalFields":  {
+                                                                  "reply_markup":  "={{ JSON.stringify({inline_keyboard: $(\u0027MatchKelas_Daftar\u0027).item.json.keyboard}) }}"
+                                                              }
+                                     },
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "PCo3XUoDlXV9LGFq",
+                                                              "name":  "AlFath Telegram Bot"
+                                                          }
+                                      },
+                      "webhookId":  "c5bed525-2dbf-4164-8370-f89924a3996b"
+                  },
+                  {
+                      "id":  "a00",
+                      "name":  "AbsenIsStart?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -560,
+                                       800
+                                   ],
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  false,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  1
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "c1",
+                                                                                   "leftValue":  "={{ String($json.isCallback) }}",
+                                                                                   "rightValue":  "false",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               },
+                                                                               {
+                                                                                   "id":  "c2",
+                                                                                   "leftValue":  "={{ ($json.cb||{}).action }}",
+                                                                                   "rightValue":  "kelas",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "or"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "a01",
+                      "name":  "GetKelas_Absen",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -320,
+                                       680
+                                   ],
+                      "parameters":  {
+                                         "method":  "GET",
+                                         "url":  "http://103.175.219.47:8090/api/v1/kelas",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "=Bearer {{ $(\u0027BotLogin\u0027).item.json.token }}"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "options":  {
+
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "a02",
+                      "name":  "MatchKelas_Absen",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -80,
+                                       680
+                                   ],
+                      "parameters":  {
+                                         "mode":  "runOnceForAllItems",
+                                         "jsCode":  "const route=$(\u0027Route\u0027).item.json;\nconst arg=(route.arg||\u0027\u0027).trim().toLowerCase();\nconst cb=route.cb;\nconst kelasId=cb\u0026\u0026cb.action===\u0027kelas\u0027?cb.args[0]:null;\nconst raw=$input.all().map(i=\u003ei.json);\nconst list=(raw.length===1\u0026\u0026Array.isArray(raw[0].data))?raw[0].data:raw;\nlet found=null;\nif(kelasId){found=list.find(k=\u003eString(k.id)===String(kelasId))||null;}\nelse if(arg){found=list.find(k=\u003e(k.nama||\u0027\u0027).toLowerCase()===arg)||null;}\nconst rows=list.map(k=\u003e[{text:k.nama,callback_data:\u0027absen:kelas:\u0027+k.id}]);\nreturn [{json:{found,list,keyboard:rows}}];"
+                                     }
+                  },
+                  {
+                      "id":  "a03",
+                      "name":  "HasClass_Absen?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2,
+                      "position":  [
+                                       160,
+                                       680
+                                   ],
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  1
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "c1",
+                                                                                   "leftValue":  "={{ $json.found }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "notEmpty",
+                                                                                                    "singleValue":  true
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "a04",
+                      "name":  "GetSantri_Absen",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       400,
+                                       560
+                                   ],
+                      "parameters":  {
+                                         "method":  "GET",
+                                         "url":  "=http://103.175.219.47:8090/api/v1/santri?kelas_id={{ $json.found.id }}",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "=Bearer {{ $(\u0027BotLogin\u0027).item.json.token }}"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "options":  {
+
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "a05",
+                      "name":  "AbsenStart",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       640,
+                                       560
+                                   ],
+                      "parameters":  {
+                                         "mode":  "runOnceForAllItems",
+                                         "jsCode":  "const SL={hadir:\u0027âœ… Hadir\u0027,sakit:\u0027ðŸ¤’ Sakit\u0027,izin:\u0027ðŸ“ Izin\u0027,alpha:\u0027âŒ Alpha\u0027};\nfunction bk(r,sm,p,ps){ps=ps||8;const st=(p-1)*ps;const pr=r.slice(st,st+ps);const rows=[];for(const x of pr){const s=sm[x.idx]||\u0027hadir\u0027;rows.push([{text:x.idx+\u0027. \u0027+x.nama+\u0027 â€” \u0027+SL[s],callback_data:\u0027absen:noop:\u0027+x.idx}]);rows.push([\u0027H\u0027,\u0027S\u0027,\u0027I\u0027,\u0027A\u0027].map(c=\u003e({text:c,callback_data:\u0027absen:set:\u0027+x.idx+\u0027:\u0027+c})));}const tp=Math.ceil(r.length/ps);if(tp\u003e1){const nav=[];if(p\u003e1)nav.push({text:\u0027â—€\u0027,callback_data:\u0027absen:page:\u0027+(p-1)});if(p\u003ctp)nav.push({text:\u0027â–¶\u0027,callback_data:\u0027absen:page:\u0027+(p+1)});rows.push(nav);}rows.push([{text:\u0027âž• Ket\u0027,callback_data:\u0027absen:ket\u0027},{text:\u0027ðŸ’¾ Simpan\u0027,callback_data:\u0027absen:save\u0027},{text:\u0027âœ– Batal\u0027,callback_data:\u0027absen:cancel\u0027}]);return rows;}\nconst raw=$input.all().map(i=\u003ei.json);\nconst santri=(raw.length===1\u0026\u0026Array.isArray(raw[0].data))?raw[0].data:raw;\nconst kelas=$(\u0027MatchKelas_Absen\u0027).item.json.found;\nconst n=$(\u0027Normalize\u0027).item.json;\nconst d=new Date().toISOString().split(\u0027T\u0027)[0];\nconst roster=santri.map((r,i)=\u003e({idx:i+1,santri_id:r.id,nama:r.nama}));\nconst sm={};\nfor(const r of roster)sm[r.idx]=\u0027hadir\u0027;\nconst sess={cmd:\u0027absen\u0027,kelas_id:kelas.id,kelas_nama:kelas.nama,tanggal:d,roster,statusMap:sm,ketMap:{},page:1};\n$getWorkflowStaticData(\u0027global\u0027)[\u0027sess_\u0027+n.chatId]=sess;\nreturn [{json:{text:\u0027Absensi \u0027+kelas.nama+\u0027 â€” \u0027+d+\u0027.\\nTandai yang tidak Hadir, lalu tekan ðŸ’¾ Simpan.\u0027,replyMarkup:{inline_keyboard:bk(roster,sm,1)}}}];"
+                                     }
+                  },
+                  {
+                      "id":  "a06",
+                      "name":  "SendAbsenBoard",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       880,
+                                       560
+                                   ],
+                      "parameters":  {
+                                         "chatId":  "={{ $(\u0027Normalize\u0027).item.json.chatId }}",
+                                         "text":  "={{ $json.text }}",
+                                         "additionalFields":  {
+                                                                  "reply_markup":  "={{ JSON.stringify($json.replyMarkup) }}"
+                                                              }
+                                     },
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "PCo3XUoDlXV9LGFq",
+                                                              "name":  "AlFath Telegram Bot"
+                                                          }
+                                      },
+                      "webhookId":  "9b67345a-12db-4ade-8fe4-56ba794bb780"
+                  },
+                  {
+                      "id":  "a07",
+                      "name":  "SendPickKelas_Absen",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       400,
+                                       800
+                                   ],
+                      "parameters":  {
+                                         "chatId":  "={{ $(\u0027Normalize\u0027).item.json.chatId }}",
+                                         "text":  "Pilih kelas untuk absensi:",
+                                         "additionalFields":  {
+                                                                  "reply_markup":  "={{ JSON.stringify({inline_keyboard:$(\u0027MatchKelas_Absen\u0027).item.json.keyboard}) }}"
+                                                              }
+                                     },
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "PCo3XUoDlXV9LGFq",
+                                                              "name":  "AlFath Telegram Bot"
+                                                          }
+                                      },
+                      "webhookId":  "5f983ef1-41e7-4bc4-939a-993230281463"
+                  },
+                  {
+                      "id":  "a08",
+                      "name":  "AbsenCb",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -320,
+                                       920
+                                   ],
+                      "parameters":  {
+                                         "jsCode":  "const SL={hadir:\u0027âœ… Hadir\u0027,sakit:\u0027ðŸ¤’ Sakit\u0027,izin:\u0027ðŸ“ Izin\u0027,alpha:\u0027âŒ Alpha\u0027};\nconst SBC={H:\u0027hadir\u0027,S:\u0027sakit\u0027,I:\u0027izin\u0027,A:\u0027alpha\u0027};\nfunction bk(r,sm,p,ps){ps=ps||8;const st=(p-1)*ps;const pr=r.slice(st,st+ps);const rows=[];for(const x of pr){const s=sm[x.idx]||\u0027hadir\u0027;rows.push([{text:x.idx+\u0027. \u0027+x.nama+\u0027 â€” \u0027+SL[s],callback_data:\u0027absen:noop:\u0027+x.idx}]);rows.push([\u0027H\u0027,\u0027S\u0027,\u0027I\u0027,\u0027A\u0027].map(c=\u003e({text:c,callback_data:\u0027absen:set:\u0027+x.idx+\u0027:\u0027+c})));}const tp=Math.ceil(r.length/ps);if(tp\u003e1){const nav=[];if(p\u003e1)nav.push({text:\u0027â—€\u0027,callback_data:\u0027absen:page:\u0027+(p-1)});if(p\u003ctp)nav.push({text:\u0027â–¶\u0027,callback_data:\u0027absen:page:\u0027+(p+1)});rows.push(nav);}rows.push([{text:\u0027âž• Ket\u0027,callback_data:\u0027absen:ket\u0027},{text:\u0027ðŸ’¾ Simpan\u0027,callback_data:\u0027absen:save\u0027},{text:\u0027âœ– Batal\u0027,callback_data:\u0027absen:cancel\u0027}]);return rows;}\nconst n=$(\u0027Normalize\u0027).item.json;\nconst cb=$(\u0027Route\u0027).item.json.cb;\nconst sd=$getWorkflowStaticData(\u0027global\u0027);\nconst sess=sd[\u0027sess_\u0027+n.chatId];\nif(!sess||sess.cmd!==\u0027absen\u0027){return [{json:{kind:\u0027answer\u0027}}];}\nlet out;\nif(cb.action===\u0027set\u0027){const idx=Number(cb.args[0]);const st=SBC[cb.args[1]];if(st)sess.statusMap[idx]=st;sd[\u0027sess_\u0027+n.chatId]=sess;out={kind:\u0027edit\u0027,text:\u0027Absensi \u0027+sess.kelas_nama+\u0027 â€” \u0027+sess.tanggal+\u0027.\u0027,replyMarkup:{inline_keyboard:bk(sess.roster,sess.statusMap,sess.page)}};}\nelse if(cb.action===\u0027page\u0027){sess.page=Number(cb.args[0]);sd[\u0027sess_\u0027+n.chatId]=sess;out={kind:\u0027edit\u0027,text:\u0027Absensi \u0027+sess.kelas_nama+\u0027 â€” \u0027+sess.tanggal+\u0027.\u0027,replyMarkup:{inline_keyboard:bk(sess.roster,sess.statusMap,sess.page)}};}\nelse if(cb.action===\u0027ket\u0027){const btns=sess.roster.map(r=\u003e({text:r.idx+\u0027. \u0027+r.nama,callback_data:\u0027absen:ketpick:\u0027+r.idx}));const kb=[];for(let i=0;i\u003cbtns.length;i+=2)kb.push(btns.slice(i,i+2));kb.push([{text:\u0027â—€ Kembali\u0027,callback_data:\u0027absen:page:\u0027+sess.page}]);out={kind:\u0027edit\u0027,text:\u0027Pilih santri untuk diberi keterangan:\u0027,replyMarkup:{inline_keyboard:kb}};}\nelse if(cb.action===\u0027ketpick\u0027){const idx=Number(cb.args[0]);const nama=(sess.roster.find(r=\u003er.idx===idx)||{}).nama||\u0027?\u0027;sess.awaitKet=idx;sd[\u0027sess_\u0027+n.chatId]=sess;out={kind:\u0027ketpick\u0027,text:\u0027Ketik keterangan untuk \u0027+nama+\u0027 (atau /lewati):\u0027}; }\nelse if(cb.action===\u0027cancel\u0027){delete sd[\u0027sess_\u0027+n.chatId];out={kind:\u0027edit\u0027,text:\u0027Absensi dibatalkan.\u0027,replyMarkup:{inline_keyboard:[]}};}\nelse if(cb.action===\u0027save\u0027){out={kind:\u0027save\u0027};}\nelse{out={kind:\u0027answer\u0027};}\nreturn [{json:out}];"
+                                     }
+                  },
+                  {
+                      "id":  "a09",
+                      "name":  "SwitchKind_Absen",
+                      "type":  "n8n-nodes-base.switch",
+                      "typeVersion":  3,
+                      "position":  [
+                                       -80,
+                                       920
+                                   ],
+                      "parameters":  {
+                                         "rules":  {
+                                                       "values":  [
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "loose",
+                                                                                                             "version":  1
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "r1",
+                                                                                                                    "leftValue":  "={{ $json.kind }}",
+                                                                                                                    "rightValue":  "edit",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "edit"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "loose",
+                                                                                                             "version":  1
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "r2",
+                                                                                                                    "leftValue":  "={{ $json.kind }}",
+                                                                                                                    "rightValue":  "ketpick",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "ketpick"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "loose",
+                                                                                                             "version":  1
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "r3",
+                                                                                                                    "leftValue":  "={{ $json.kind }}",
+                                                                                                                    "rightValue":  "save",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "save"
+                                                                      }
+                                                                  ]
+                                                   },
+                                         "options":  {
+                                                         "fallbackOutput":  "extra"
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "a10",
+                      "name":  "EditAbsenBoard",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       160,
+                                       800
+                                   ],
+                      "parameters":  {
+                                         "resource":  "message",
+                                         "operation":  "editMessageText",
+                                         "chatId":  "={{ $(\u0027Normalize\u0027).item.json.chatId }}",
+                                         "messageId":  "={{ $(\u0027Normalize\u0027).item.json.messageId }}",
+                                         "text":  "={{ $json.text }}",
+                                         "additionalFields":  {
+                                                                  "reply_markup":  "={{ JSON.stringify($json.replyMarkup||{inline_keyboard:[]}) }}"
+                                                              }
+                                     },
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "PCo3XUoDlXV9LGFq",
+                                                              "name":  "AlFath Telegram Bot"
+                                                          }
+                                      },
+                      "webhookId":  "cabc7edf-184c-4e48-a167-9181bbe8edcc"
+                  },
+                  {
+                      "id":  "a11",
+                      "name":  "AnswerCb_Edit",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       400,
+                                       800
+                                   ],
+                      "parameters":  {
+                                         "resource":  "callback",
+                                         "operation":  "answerQuery",
+                                         "queryId":  "={{ $(\u0027Normalize\u0027).item.json.callbackId }}",
+                                         "additionalFields":  {
+
+                                                              }
+                                     },
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "PCo3XUoDlXV9LGFq",
+                                                              "name":  "AlFath Telegram Bot"
+                                                          }
+                                      },
+                      "webhookId":  "a7e3b1ee-3613-4910-bcf2-46e54a1f663a"
+                  },
+                  {
+                      "id":  "a12",
+                      "name":  "AnswerCbKet",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       160,
+                                       1040
+                                   ],
+                      "parameters":  {
+                                         "resource":  "callback",
+                                         "operation":  "answerQuery",
+                                         "queryId":  "={{ $(\u0027Normalize\u0027).item.json.callbackId }}",
+                                         "additionalFields":  {
+
+                                                              }
+                                     },
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "PCo3XUoDlXV9LGFq",
+                                                              "name":  "AlFath Telegram Bot"
+                                                          }
+                                      },
+                      "webhookId":  "555f5962-7f1d-467f-b787-cb5c22c271d5"
+                  },
+                  {
+                      "id":  "a13",
+                      "name":  "SendForceReply_Absen",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       400,
+                                       1040
+                                   ],
+                      "parameters":  {
+                                         "chatId":  "={{ $(\u0027Normalize\u0027).item.json.chatId }}",
+                                         "text":  "={{ $(\u0027AbsenCb\u0027).item.json.text }}",
+                                         "additionalFields":  {
+                                                                  "reply_markup":  "={{ JSON.stringify({force_reply:true}) }}"
+                                                              }
+                                     },
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "PCo3XUoDlXV9LGFq",
+                                                              "name":  "AlFath Telegram Bot"
+                                                          }
+                                      },
+                      "webhookId":  "cfdcedab-2852-4025-ae11-9ea3227ad191"
+                  },
+                  {
+                      "id":  "a14",
+                      "name":  "BuildBatch",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       160,
+                                       1160
+                                   ],
+                      "parameters":  {
+                                         "jsCode":  "const n=$(\u0027Normalize\u0027).item.json;\nconst sd=$getWorkflowStaticData(\u0027global\u0027);\nconst sess=sd[\u0027sess_\u0027+n.chatId];\nconst c={hadir:0,sakit:0,izin:0,alpha:0};\nfor(const r of sess.roster)c[sess.statusMap[r.idx]||\u0027hadir\u0027]++;\nconst summaryText=\u0027âœ… Tersimpan: \u0027+c.hadir+\u0027 Hadir Â· \u0027+c.sakit+\u0027 Sakit Â· \u0027+c.izin+\u0027 Izin Â· \u0027+c.alpha+\u0027 Alpha\u0027;\nconst batch={kelas_id:sess.kelas_id,tanggal:sess.tanggal,items:sess.roster.map(r=\u003e{const item={santri_id:r.santri_id,status:sess.statusMap[r.idx]||\u0027hadir\u0027};const ket=(sess.ketMap[r.idx]||\u0027\u0027).trim();if(ket)item.keterangan=ket;return item;})};\nreturn [{json:{batch,summaryText}}];"
+                                     }
+                  },
+                  {
+                      "id":  "a15",
+                      "name":  "SaveAbsen",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       400,
+                                       1160
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "http://103.175.219.47:8090/api/v1/absensi/batch",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "=Bearer {{ $(\u0027BotLogin\u0027).item.json.token }}"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "contentType":  "raw",
+                                         "rawContentType":  "application/json",
+                                         "body":  "={{ JSON.stringify($json.batch) }}",
+                                         "options":  {
+
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "a16",
+                      "name":  "ClearSessAbsen",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       640,
+                                       1160
+                                   ],
+                      "parameters":  {
+                                         "jsCode":  "const n=$(\u0027Normalize\u0027).item.json;\nconst sd=$getWorkflowStaticData(\u0027global\u0027);\nconst summaryText=$(\u0027BuildBatch\u0027).item.json.summaryText;\ndelete sd[\u0027sess_\u0027+n.chatId];\nreturn [{json:{summaryText}}];"
+                                     }
+                  },
+                  {
+                      "id":  "a17",
+                      "name":  "EditAbsenSummary",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       880,
+                                       1160
+                                   ],
+                      "parameters":  {
+                                         "resource":  "message",
+                                         "operation":  "editMessageText",
+                                         "chatId":  "={{ $(\u0027Normalize\u0027).item.json.chatId }}",
+                                         "messageId":  "={{ $(\u0027Normalize\u0027).item.json.messageId }}",
+                                         "text":  "={{ $json.summaryText }}",
+                                         "additionalFields":  {
+
+                                                              }
+                                     },
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "PCo3XUoDlXV9LGFq",
+                                                              "name":  "AlFath Telegram Bot"
+                                                          }
+                                      },
+                      "webhookId":  "58c9037f-fd6e-4757-9034-63f96430d5ad"
+                  },
+                  {
+                      "id":  "a18",
+                      "name":  "AnswerCb",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       160,
+                                       920
+                                   ],
+                      "parameters":  {
+                                         "resource":  "callback",
+                                         "operation":  "answerQuery",
+                                         "queryId":  "={{ $(\u0027Normalize\u0027).item.json.callbackId }}",
+                                         "additionalFields":  {
+
+                                                              }
+                                     },
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "PCo3XUoDlXV9LGFq",
+                                                              "name":  "AlFath Telegram Bot"
+                                                          }
+                                      },
+                      "webhookId":  "9313d04e-8fb8-4ad9-8169-98c48622ec0e"
+                  },
+                  {
+                      "id":  "n00",
+                      "name":  "NilaiIsStart?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -560,
+                                       1400
+                                   ],
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  false,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  1
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "c1",
+                                                                                   "leftValue":  "={{ String($json.isCallback) }}",
+                                                                                   "rightValue":  "false",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "n01",
+                      "name":  "NilaiStart",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -320,
+                                       1280
+                                   ],
+                      "parameters":  {
+                                         "jsCode":  "const n=$(\u0027Normalize\u0027).item.json;\nconst arg=(($(\u0027Route\u0027).item.json.arg)||\u0027\u0027).trim().toLowerCase();\nconst komps={tugas:\u0027Tugas\u0027,uts:\u0027UTS\u0027,uas:\u0027UAS\u0027};\nconst komponen=komps[arg]||null;\nconst sd=$getWorkflowStaticData(\u0027global\u0027);\nsd[\u0027sess_\u0027+n.chatId]={cmd:\u0027nilai\u0027,komponen,step:komponen?\u0027kelas\u0027:\u0027komponen\u0027,kelas_id:null,mata_pelajaran_id:null};\nreturn [{json:{komponen}}];"
+                                     }
+                  },
+                  {
+                      "id":  "n02",
+                      "name":  "HasKomponen?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -80,
+                                       1280
+                                   ],
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose",
+                                                                            "version":  1
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "c1",
+                                                                                   "leftValue":  "={{ $json.komponen }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "notEmpty",
+                                                                                                    "singleValue":  true
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "n03",
+                      "name":  "SendPickKomponen",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       160,
+                                       1400
+                                   ],
+                      "parameters":  {
+                                         "chatId":  "={{ $(\u0027Normalize\u0027).item.json.chatId }}",
+                                         "text":  "Pilih komponen nilai:",
+                                         "additionalFields":  {
+                                                                  "reply_markup":  "{\"inline_keyboard\":[[{\"text\":\"Tugas\",\"callback_data\":\"nilai:komp:T\"},{\"text\":\"UTS\",\"callback_data\":\"nilai:komp:U\"},{\"text\":\"UAS\",\"callback_data\":\"nilai:komp:A\"}]]}"
+                                                              }
+                                     },
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "PCo3XUoDlXV9LGFq",
+                                                              "name":  "AlFath Telegram Bot"
+                                                          }
+                                      },
+                      "webhookId":  "f88b368a-d5a1-4563-9ee9-c9377277d6e1"
+                  },
+                  {
+                      "id":  "n04",
+                      "name":  "GetKelas_Nilai",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       160,
+                                       1280
+                                   ],
+                      "parameters":  {
+                                         "method":  "GET",
+                                         "url":  "http://103.175.219.47:8090/api/v1/kelas",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "=Bearer {{ $(\u0027BotLogin\u0027).item.json.token }}"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "options":  {
+
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "n05",
+                      "name":  "MatchKelas_Nilai",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       400,
+                                       1280
+                                   ],
+                      "parameters":  {
+                                         "mode":  "runOnceForAllItems",
+                                         "jsCode":  "const raw=$input.all().map(i=\u003ei.json);\nconst list=(raw.length===1\u0026\u0026Array.isArray(raw[0].data))?raw[0].data:raw;\nconst rows=list.map(k=\u003e[{text:k.nama,callback_data:\u0027nilai:kelas:\u0027+k.id}]);\nreturn [{json:{list,keyboard:rows}}];"
+                                     }
+                  },
+                  {
+                      "id":  "n06",
+                      "name":  "SendPickKelas_Nilai",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       640,
+                                       1280
+                                   ],
+                      "parameters":  {
+                                         "chatId":  "={{ $(\u0027Normalize\u0027).item.json.chatId }}",
+                                         "text":  "Pilih kelas:",
+                                         "additionalFields":  {
+                                                                  "reply_markup":  "={{ JSON.stringify({inline_keyboard:$(\u0027MatchKelas_Nilai\u0027).item.json.keyboard}) }}"
+                                                              }
+                                     },
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "PCo3XUoDlXV9LGFq",
+                                                              "name":  "AlFath Telegram Bot"
+                                                          }
+                                      },
+                      "webhookId":  "f598d56a-4f1c-471d-987d-dcf75009aaf7"
+                  },
+                  {
+                      "id":  "n07",
+                      "name":  "NilaiCb",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -320,
+                                       1520
+                                   ],
+                      "parameters":  {
+                                         "jsCode":  "const n=$(\u0027Normalize\u0027).item.json;\nconst cb=$(\u0027Route\u0027).item.json.cb;\nconst sd=$getWorkflowStaticData(\u0027global\u0027);\nconst sess=sd[\u0027sess_\u0027+n.chatId]||{cmd:\u0027nilai\u0027};\nlet kind=\u0027answer\u0027;\nif(cb.action===\u0027komp\u0027){\n  const map={T:\u0027Tugas\u0027,U:\u0027UTS\u0027,A:\u0027UAS\u0027};\n  sess.komponen=map[cb.args[0]]||cb.args[0];\n  sess.step=\u0027kelas\u0027;\n  sd[\u0027sess_\u0027+n.chatId]=sess;\n  kind=\u0027kelas\u0027;\n} else if(cb.action===\u0027kelas\u0027){\n  sess.kelas_id=Number(cb.args[0]);\n  sess.step=\u0027mapel\u0027;\n  sd[\u0027sess_\u0027+n.chatId]=sess;\n  kind=\u0027mapel\u0027;\n} else if(cb.action===\u0027mapel\u0027){\n  sess.mata_pelajaran_id=Number(cb.args[0]);\n  sess.step=\u0027ready\u0027;\n  sd[\u0027sess_\u0027+n.chatId]=sess;\n  kind=\u0027ready\u0027;\n}\nreturn [{json:{kind,kelas_id:sess.kelas_id,mapel_id:sess.mata_pelajaran_id,komponen:sess.komponen}}];"
+                                     }
+                  },
+                  {
+                      "id":  "n08",
+                      "name":  "SwitchNilaiKind",
+                      "type":  "n8n-nodes-base.switch",
+                      "typeVersion":  3,
+                      "position":  [
+                                       -80,
+                                       1520
+                                   ],
+                      "parameters":  {
+                                         "rules":  {
+                                                       "values":  [
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "loose",
+                                                                                                             "version":  1
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "r1",
+                                                                                                                    "leftValue":  "={{ $json.kind }}",
+                                                                                                                    "rightValue":  "kelas",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "kelas"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "loose",
+                                                                                                             "version":  1
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "r2",
+                                                                                                                    "leftValue":  "={{ $json.kind }}",
+                                                                                                                    "rightValue":  "mapel",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "mapel"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "loose",
+                                                                                                             "version":  1
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "r3",
+                                                                                                                    "leftValue":  "={{ $json.kind }}",
+                                                                                                                    "rightValue":  "ready",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "ready"
+                                                                      }
+                                                                  ]
+                                                   },
+                                         "options":  {
+                                                         "fallbackOutput":  "extra"
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "n09",
+                      "name":  "GetMapel_Nilai",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       160,
+                                       1640
+                                   ],
+                      "parameters":  {
+                                         "method":  "GET",
+                                         "url":  "=http://103.175.219.47:8090/api/v1/kelas/{{ $json.kelas_id }}/mapel",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "=Bearer {{ $(\u0027BotLogin\u0027).item.json.token }}"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "options":  {
+
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "n10",
+                      "name":  "MatchMapel_Nilai",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       400,
+                                       1640
+                                   ],
+                      "parameters":  {
+                                         "mode":  "runOnceForAllItems",
+                                         "jsCode":  "const raw=$input.all().map(i=\u003ei.json);\nconst list=(raw.length===1\u0026\u0026Array.isArray(raw[0].data))?raw[0].data:raw;\nconst rows=list.map(m=\u003e[{text:m.nama,callback_data:\u0027nilai:mapel:\u0027+m.id}]);\nreturn [{json:{list,keyboard:rows}}];"
+                                     }
+                  },
+                  {
+                      "id":  "n11",
+                      "name":  "SendPickMapel_Nilai",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       640,
+                                       1640
+                                   ],
+                      "parameters":  {
+                                         "chatId":  "={{ $(\u0027Normalize\u0027).item.json.chatId }}",
+                                         "text":  "Pilih mata pelajaran:",
+                                         "additionalFields":  {
+                                                                  "reply_markup":  "={{ JSON.stringify({inline_keyboard:$(\u0027MatchMapel_Nilai\u0027).item.json.keyboard}) }}"
+                                                              }
+                                     },
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "PCo3XUoDlXV9LGFq",
+                                                              "name":  "AlFath Telegram Bot"
+                                                          }
+                                      },
+                      "webhookId":  "f43d28cc-0c6a-4cc2-b634-1823ee1dc92c"
+                  },
+                  {
+                      "id":  "n12",
+                      "name":  "GetPeriode_Nilai",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       160,
+                                       1760
+                                   ],
+                      "parameters":  {
+                                         "method":  "GET",
+                                         "url":  "http://103.175.219.47:8090/api/v1/periode",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "=Bearer {{ $(\u0027BotLogin\u0027).item.json.token }}"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "options":  {
+
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "n13",
+                      "name":  "SetPeriodeInSess",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       400,
+                                       1760
+                                   ],
+                      "parameters":  {
+                                         "mode":  "runOnceForAllItems",
+                                         "jsCode":  "const n=$(\u0027Normalize\u0027).item.json;\nconst sd=$getWorkflowStaticData(\u0027global\u0027);\nconst sess=sd[\u0027sess_\u0027+n.chatId]||{};\nconst raw=$input.all().map(i=\u003ei.json);\nconst periodes=(raw.length===1\u0026\u0026Array.isArray(raw[0].data))?raw[0].data:raw;\nconst active=periodes.find(p=\u003ep.is_active)||periodes[0];\nsess.periode_id=active?active.id:1;\nsess.periode_nama=active?active.nama:\u0027\u0027;\nsd[\u0027sess_\u0027+n.chatId]=sess;\nreturn [{json:{kelas_id:sess.kelas_id,mapel_id:sess.mata_pelajaran_id,periode_id:sess.periode_id,komponen:sess.komponen}}];"
+                                     }
+                  },
+                  {
+                      "id":  "n14",
+                      "name":  "GetNextKe_Nilai",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       640,
+                                       1760
+                                   ],
+                      "parameters":  {
+                                         "method":  "GET",
+                                         "url":  "=http://103.175.219.47:8090/api/v1/nilai/tugas?kelas_id={{ $json.kelas_id }}\u0026mata_pelajaran_id={{ $json.mapel_id }}\u0026periode_id={{ $json.periode_id }}",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "=Bearer {{ $(\u0027BotLogin\u0027).item.json.token }}"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "options":  {
+                                                         "response":  {
+                                                                          "response":  {
+                                                                                           "neverError":  true
+                                                                                       }
+                                                                      }
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "n15",
+                      "name":  "StoreNextKe",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       880,
+                                       1760
+                                   ],
+                      "parameters":  {
+                                         "jsCode":  "const n=$(\u0027Normalize\u0027).item.json;\nconst sd=$getWorkflowStaticData(\u0027global\u0027);\nconst sess=sd[\u0027sess_\u0027+n.chatId]||{};\nconst data=$input.item.json;\nsess.ke=data.next_ke||1;\nsd[\u0027sess_\u0027+n.chatId]=sess;\nconst ps=$(\u0027SetPeriodeInSess\u0027).item.json;\nreturn [{json:{kelas_id:ps.kelas_id,ke:sess.ke}}];"
+                                     }
+                  },
+                  {
+                      "id":  "n16",
+                      "name":  "GetSantri_Nilai",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       1120,
+                                       1760
+                                   ],
+                      "parameters":  {
+                                         "method":  "GET",
+                                         "url":  "=http://103.175.219.47:8090/api/v1/santri?kelas_id={{ $json.kelas_id }}",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "=Bearer {{ $(\u0027BotLogin\u0027).item.json.token }}"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "options":  {
+
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "n17",
+                      "name":  "BuildScorePrompt",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1360,
+                                       1760
+                                   ],
+                      "parameters":  {
+                                         "mode":  "runOnceForAllItems",
+                                         "jsCode":  "const raw=$input.all().map(i=\u003ei.json);\nconst santri=(raw.length===1\u0026\u0026Array.isArray(raw[0].data))?raw[0].data:raw;\nconst n=$(\u0027Normalize\u0027).item.json;\nconst sd=$getWorkflowStaticData(\u0027global\u0027);\nconst sess=sd[\u0027sess_\u0027+n.chatId]||{};\nsess.roster=santri.map((r,i)=\u003e({idx:i+1,santri_id:r.id,nama:r.nama}));\nsess.step=\u0027scores\u0027;\nsd[\u0027sess_\u0027+n.chatId]=sess;\nconst kompLabel=sess.komponen===\u0027Tugas\u0027?\u0027Tugas ke-\u0027+sess.ke:sess.komponen;\nconst rosterList=sess.roster.map(r=\u003er.idx+\u0027. \u0027+r.nama).join(\u0027\\n\u0027);\nconst text=\u0027ðŸ“¥ Input Nilai \u0027+kompLabel+\u0027\\n\\nKirim nilai dalam format:\\n\u003cnomor\u003e \u003cnilai\u003e\\n\\nContoh: 1 85\\n\\n\u0027+rosterList;\nreturn [{json:{text}}];"
+                                     }
+                  },
+                  {
+                      "id":  "n18",
+                      "name":  "SendScorePrompt",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       1600,
+                                       1760
+                                   ],
+                      "parameters":  {
+                                         "chatId":  "={{ $(\u0027Normalize\u0027).item.json.chatId }}",
+                                         "text":  "={{ $json.text }}",
+                                         "additionalFields":  {
+                                                                  "reply_markup":  "={{ JSON.stringify({force_reply:true}) }}"
+                                                              }
+                                     },
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "PCo3XUoDlXV9LGFq",
+                                                              "name":  "AlFath Telegram Bot"
+                                                          }
+                                      },
+                      "webhookId":  "6ea2155d-22e0-4375-803f-50c08c879bdd"
+                  },
+                  {
+                      "id":  "f00",
+                      "name":  "CheckForcereply",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -560,
+                                       2000
+                                   ],
+                      "parameters":  {
+                                         "jsCode":  "function parseScores(text,roster){\nconst result={entries:[],errors:[]};\nconst trimmed=(text||\u0027\u0027).trim();\nif(!trimmed){result.errors.push(\u0027Pesan kosong.\u0027);return result;}\nconst seen=new Set();\nfor(const line of trimmed.split(\u0027\\n\u0027).map(l=\u003el.trim()).filter(Boolean)){\nconst tokens=line.split(/\\s+/);\nconst num=Number(tokens[0]);\nconst entry=roster.find(r=\u003er.idx===num);\nif(!Number.isInteger(num)||!entry){result.errors.push(\u0027Nomor tidak dikenal: \"\u0027+line+\u0027\"\u0027);continue;}\nif(seen.has(num)){result.errors.push(\u0027Nomor \u0027+num+\u0027 ditulis dua kali.\u0027);continue;}\nconst nilai=Number(tokens[1]);\nif(!Number.isFinite(nilai)||nilai\u003c0||nilai\u003e100){result.errors.push(\u0027Nilai harus 0-100 pada \"\u0027+line+\u0027\".\u0027);continue;}\nseen.add(num);\nresult.entries.push({idx:num,santri_id:entry.santri_id,nilai});\n}\nreturn result;\n}\nconst n=$(\u0027Normalize\u0027).item.json;\nconst sd=$getWorkflowStaticData(\u0027global\u0027);\nconst sess=sd[\u0027sess_\u0027+n.chatId];\nif(!sess||n.isCallback){return [{json:{handled:false}}];}\nif(sess.cmd===\u0027absen\u0027\u0026\u0026sess.awaitKet){\nconst idx=sess.awaitKet;\nconst txt=(n.text||\u0027\u0027).trim();\nif(txt\u0026\u0026txt!==\u0027/lewati\u0027)sess.ketMap[idx]=txt;\ndelete sess.awaitKet;\nsd[\u0027sess_\u0027+n.chatId]=sess;\nreturn [{json:{handled:true,kind:\u0027ket\u0027,text:\u0027Keterangan disimpan. Lanjut tandai atau tekan ðŸ’¾ Simpan.\u0027}}];\n}\nif(sess.cmd===\u0027nilai\u0027\u0026\u0026sess.step===\u0027scores\u0027){\nconst parsed=parseScores(n.text,sess.roster);\nif(parsed.errors.length){return [{json:{handled:true,kind:\u0027nilaiErrors\u0027,errors:parsed.errors}}];}\nconst kompKey=sess.komponen===\u0027Tugas\u0027?\u0027tugas\u0027:(sess.komponen===\u0027UTS\u0027?\u0027uts\u0027:\u0027uas\u0027);\nlet body;\nif(sess.komponen===\u0027Tugas\u0027){\nbody={kelas_id:sess.kelas_id,mata_pelajaran_id:sess.mata_pelajaran_id,periode_id:sess.periode_id,ke:sess.ke,items:parsed.entries.map(e=\u003e({santri_id:e.santri_id,nilai:e.nilai}))};\n} else {\nbody={kelas_id:sess.kelas_id,mata_pelajaran_id:sess.mata_pelajaran_id,periode_id:sess.periode_id,items:parsed.entries.map(e=\u003e({santri_id:e.santri_id,[kompKey]:e.nilai}))};\n}\nconst endpoint=sess.komponen===\u0027Tugas\u0027?\u0027/nilai/tugas/batch\u0027:\u0027/nilai/batch\u0027;\nconst kompLabel=sess.komponen===\u0027Tugas\u0027?\u0027Tugas ke-\u0027+sess.ke:sess.komponen;\nconst summaryText=\u0027âœ… Nilai \u0027+kompLabel+\u0027 tersimpan untuk \u0027+parsed.entries.length+\u0027 santri.\u0027;\ndelete sd[\u0027sess_\u0027+n.chatId];\nreturn [{json:{handled:true,kind:\u0027nilaiSave\u0027,endpoint,body,summaryText}}];\n}\nreturn [{json:{handled:false}}];"
+                                     }
+                  },
+                  {
+                      "id":  "f01",
+                      "name":  "SwitchFR",
+                      "type":  "n8n-nodes-base.switch",
+                      "typeVersion":  3,
+                      "position":  [
+                                       -320,
+                                       2000
+                                   ],
+                      "parameters":  {
+                                         "rules":  {
+                                                       "values":  [
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "loose",
+                                                                                                             "version":  1
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "r1",
+                                                                                                                    "leftValue":  "={{ $json.kind }}",
+                                                                                                                    "rightValue":  "ket",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "ket"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "loose",
+                                                                                                             "version":  1
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "r2",
+                                                                                                                    "leftValue":  "={{ $json.kind }}",
+                                                                                                                    "rightValue":  "nilaiSave",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "nilaiSave"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  false,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "loose",
+                                                                                                             "version":  1
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "r3",
+                                                                                                                    "leftValue":  "={{ $json.kind }}",
+                                                                                                                    "rightValue":  "nilaiErrors",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "nilaiErrors"
+                                                                      }
+                                                                  ]
+                                                   },
+                                         "options":  {
+                                                         "fallbackOutput":  "extra"
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "f02",
+                      "name":  "SendKetConfirm",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       -80,
+                                       1880
+                                   ],
+                      "parameters":  {
+                                         "chatId":  "={{ $(\u0027Normalize\u0027).item.json.chatId }}",
+                                         "text":  "={{ $json.text }}",
+                                         "additionalFields":  {
+
+                                                              }
+                                     },
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "PCo3XUoDlXV9LGFq",
+                                                              "name":  "AlFath Telegram Bot"
+                                                          }
+                                      },
+                      "webhookId":  "3a255424-b6e2-45b9-9c6c-3fa220ce3636"
+                  },
+                  {
+                      "id":  "f03",
+                      "name":  "SaveNilai_FR",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -80,
+                                       2000
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "=http://103.175.219.47:8090/api/v1{{ $json.endpoint }}",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "=Bearer {{ $(\u0027BotLogin\u0027).item.json.token }}"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "contentType":  "raw",
+                                         "rawContentType":  "application/json",
+                                         "body":  "={{ JSON.stringify($json.body) }}",
+                                         "options":  {
+
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "f04",
+                      "name":  "SendNilaiSaved",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       160,
+                                       2000
+                                   ],
+                      "parameters":  {
+                                         "chatId":  "={{ $(\u0027Normalize\u0027).item.json.chatId }}",
+                                         "text":  "={{ $(\u0027CheckForcereply\u0027).item.json.summaryText }}",
+                                         "additionalFields":  {
+
+                                                              }
+                                     },
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "PCo3XUoDlXV9LGFq",
+                                                              "name":  "AlFath Telegram Bot"
+                                                          }
+                                      },
+                      "webhookId":  "f4677a8f-8680-44ff-8446-118c3f4ba49c"
+                  },
+                  {
+                      "id":  "f05",
+                      "name":  "SendNilaiErrors",
+                      "type":  "n8n-nodes-base.telegram",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       -80,
+                                       2120
+                                   ],
+                      "parameters":  {
+                                         "chatId":  "={{ $(\u0027Normalize\u0027).item.json.chatId }}",
+                                         "text":  "={{ \u0027âŒ Ada kesalahan:\\n\\n\u0027 + $json.errors.join(\u0027\\n\u0027) }}",
+                                         "additionalFields":  {
+
+                                                              }
+                                     },
+                      "credentials":  {
+                                          "telegramApi":  {
+                                                              "id":  "PCo3XUoDlXV9LGFq",
+                                                              "name":  "AlFath Telegram Bot"
+                                                          }
+                                      },
+                      "webhookId":  "d623c89e-7c1c-40da-bc0a-fce8139de710"
+                  }
+              ],
+    "connections":  {
+                        "Telegram Trigger":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Normalize",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Normalize":  {
+                                          "main":  [
+                                                       [
+                                                           {
+                                                               "node":  "BotLogin",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                                   ]
+                                      },
+                        "BotLogin":  {
+                                         "main":  [
+                                                      [
+                                                          {
+                                                              "node":  "Registered?",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                                  ]
+                                     },
+                        "Registered?":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Route",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ],
+                                                         [
+                                                             {
+                                                                 "node":  "Send: Not Registered",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "Route":  {
+                                      "main":  [
+                                                   [
+                                                       {
+                                                           "node":  "Dispatch",
+                                                           "type":  "main",
+                                                           "index":  0
+                                                       }
+                                                   ]
+                                               ]
+                                  },
+                        "Dispatch":  {
+                                         "main":  [
+                                                      [
+                                                          {
+                                                              "node":  "AbsenIsStart?",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ],
+                                                      [
+                                                          {
+                                                              "node":  "NilaiIsStart?",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ],
+                                                      [
+                                                          {
+                                                              "node":  "GetKelas_Daftar",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ],
+                                                      [
+                                                          {
+                                                              "node":  "Send: Menu",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ],
+                                                      [
+                                                          {
+                                                              "node":  "CheckForcereply",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                                  ]
+                                     },
+                        "GetKelas_Daftar":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "MatchKelas_Daftar",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "MatchKelas_Daftar":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "HasClass_Daftar?",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "HasClass_Daftar?":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "GetSantri_Daftar",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ],
+                                                              [
+                                                                  {
+                                                                      "node":  "SendPickKelas_Daftar",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "GetSantri_Daftar":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "FormatRoster_Daftar",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "FormatRoster_Daftar":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Send_Daftar",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "AbsenIsStart?":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "GetKelas_Absen",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ],
+                                                           [
+                                                               {
+                                                                   "node":  "AbsenCb",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "GetKelas_Absen":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "MatchKelas_Absen",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "MatchKelas_Absen":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "HasClass_Absen?",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "HasClass_Absen?":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "GetSantri_Absen",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ],
+                                                             [
+                                                                 {
+                                                                     "node":  "SendPickKelas_Absen",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "GetSantri_Absen":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "AbsenStart",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "AbsenStart":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "SendAbsenBoard",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       },
+                        "AbsenCb":  {
+                                        "main":  [
+                                                     [
+                                                         {
+                                                             "node":  "SwitchKind_Absen",
+                                                             "type":  "main",
+                                                             "index":  0
+                                                         }
+                                                     ]
+                                                 ]
+                                    },
+                        "SwitchKind_Absen":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "EditAbsenBoard",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ],
+                                                              [
+                                                                  {
+                                                                      "node":  "AnswerCbKet",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ],
+                                                              [
+                                                                  {
+                                                                      "node":  "BuildBatch",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ],
+                                                              [
+                                                                  {
+                                                                      "node":  "AnswerCb",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "EditAbsenBoard":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "AnswerCb_Edit",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "AnswerCbKet":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "SendForceReply_Absen",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "BuildBatch":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "SaveAbsen",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       },
+                        "SaveAbsen":  {
+                                          "main":  [
+                                                       [
+                                                           {
+                                                               "node":  "ClearSessAbsen",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                                   ]
+                                      },
+                        "ClearSessAbsen":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "EditAbsenSummary",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "NilaiIsStart?":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "NilaiStart",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ],
+                                                           [
+                                                               {
+                                                                   "node":  "NilaiCb",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "NilaiStart":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "HasKomponen?",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       },
+                        "HasKomponen?":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "GetKelas_Nilai",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ],
+                                                          [
+                                                              {
+                                                                  "node":  "SendPickKomponen",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "NilaiCb":  {
+                                        "main":  [
+                                                     [
+                                                         {
+                                                             "node":  "SwitchNilaiKind",
+                                                             "type":  "main",
+                                                             "index":  0
+                                                         }
+                                                     ]
+                                                 ]
+                                    },
+                        "SwitchNilaiKind":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "GetKelas_Nilai",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ],
+                                                             [
+                                                                 {
+                                                                     "node":  "GetMapel_Nilai",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ],
+                                                             [
+                                                                 {
+                                                                     "node":  "GetPeriode_Nilai",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "GetKelas_Nilai":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "MatchKelas_Nilai",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "MatchKelas_Nilai":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "SendPickKelas_Nilai",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "GetMapel_Nilai":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "MatchMapel_Nilai",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "MatchMapel_Nilai":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "SendPickMapel_Nilai",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "GetPeriode_Nilai":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "SetPeriodeInSess",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "SetPeriodeInSess":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "GetNextKe_Nilai",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "GetNextKe_Nilai":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "StoreNextKe",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "StoreNextKe":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "GetSantri_Nilai",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "GetSantri_Nilai":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "BuildScorePrompt",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "BuildScorePrompt":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "SendScorePrompt",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "CheckForcereply":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "SwitchFR",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "SwitchFR":  {
+                                         "main":  [
+                                                      [
+                                                          {
+                                                              "node":  "SendKetConfirm",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ],
+                                                      [
+                                                          {
+                                                              "node":  "SaveNilai_FR",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ],
+                                                      [
+                                                          {
+                                                              "node":  "SendNilaiErrors",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                                  ]
+                                     },
+                        "SaveNilai_FR":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "SendNilaiSaved",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "timezone":  "Asia/Jakarta"
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "nodeGroups":  [
+
+                   ],
+    "pinData":  null,
+    "versionId":  "dd9c8195-907f-49c5-8fe6-55025f15eab0",
+    "activeVersionId":  "dd9c8195-907f-49c5-8fe6-55025f15eab0",
+    "versionCounter":  5,
+    "triggerCount":  1,
+    "sourceWorkflowId":  null,
+    "shared":  [
+                   {
+                       "updatedAt":  "2026-06-23T04:00:52.760Z",
+                       "createdAt":  "2026-06-23T04:00:52.760Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "FgDK2YXQDy2RtwS5",
+                       "projectId":  "Zti5Qujz2jgfF048",
+                       "project":  {
+                                       "updatedAt":  "2026-06-15T15:17:43.860Z",
+                                       "createdAt":  "2026-06-15T15:13:04.250Z",
+                                       "id":  "Zti5Qujz2jgfF048",
+                                       "name":  "Muhammad Bin Djafar Almasyhur \u003cmuhammadmasyhur2@gmail.com\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "customTelemetryTags":  [
+
+                                                               ],
+                                       "creatorId":  "b3c730b0-46c5-44e5-93d4-4dcc3f6c616b"
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ]
+}
