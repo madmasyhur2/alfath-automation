@@ -1,6 +1,6 @@
 # Al-Fath School Monitoring
 
-Telegram bot → n8n → Google Sheets → Looker Studio. See the design spec in
+Telegram bot → n8n → SIM-Madrasah REST API (MySQL). Dashboard tersedia di SIM web app. See the design spec in
 `docs/superpowers/specs/` and the implementation plans in `docs/superpowers/plans/`.
 
 ## Logic tests
