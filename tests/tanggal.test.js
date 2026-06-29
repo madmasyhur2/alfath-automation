@@ -16,3 +16,8 @@ test('malformed or out-of-range is an error', () => {
   assert.match(parseTenggat('2026-13-40').error, /tidak valid|YYYY-MM-DD/);
   assert.ok(parseTenggat('').error);
 });
+
+test('impossible calendar dates are rejected', () => {
+  assert.ok(parseTenggat('2026-02-31').error);
+  assert.ok(parseTenggat('2026-04-31').error);
+});

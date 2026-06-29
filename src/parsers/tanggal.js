@@ -8,6 +8,10 @@ function parseTenggat(text) {
   const mo = Number(m[2]);
   const d = Number(m[3]);
   if (mo < 1 || mo > 12 || d < 1 || d > 31) return { error: 'Tanggal tidak valid.' };
+  const dt = new Date(t + 'T00:00:00');
+  if (dt.getFullYear() !== Number(m[1]) || dt.getMonth() + 1 !== mo || dt.getDate() !== d) {
+    return { error: 'Tanggal tidak valid.' };
+  }
   return { date: t };
 }
 module.exports = { parseTenggat };
