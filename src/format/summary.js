@@ -13,4 +13,23 @@ function formatTugasHistory(nama, list, rata) {
   return `${nama}: ${parts} → rata² ${rata}`;
 }
 
-module.exports = { formatAbsenSummary, formatNilaiSummary, formatTugasHistory };
+function formatCatatanList(nama, list) {
+  if (!list || list.length === 0) return `Belum ada catatan untuk ${nama}.`;
+  const lines = list.map((c) => `• ${c.tanggal}: ${c.teks}`).join('\n');
+  return `Catatan terakhir untuk ${nama}:\n${lines}`;
+}
+
+function formatCatatanSaved(nama) {
+  return `✅ Catatan untuk ${nama} tersimpan.`;
+}
+
+function formatTugasSaved(mapel, kelas, tenggat) {
+  let txt = `✅ Tugas ${mapel} ${kelas} tersimpan.`;
+  if (tenggat) txt += ` (tenggat ${tenggat})`;
+  return txt;
+}
+
+module.exports = {
+  formatAbsenSummary, formatNilaiSummary, formatTugasHistory,
+  formatCatatanList, formatCatatanSaved, formatTugasSaved,
+};
